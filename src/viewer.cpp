@@ -39,6 +39,13 @@ Viewer::Viewer(std::string filename)
 	{
 		std::cerr << "Could not open " << filename << std::endl;
 	}
+	currMode = MODEL_TRANSLATE;
+	mb1 = false;
+	mb2 = false;
+	mb3 = false;
+translateX = 0;
+translateY = 0;
+translateZ = 0;
 }
 
 Viewer::~Viewer()
@@ -121,7 +128,7 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
 	glLightfv(GL_LIGHT0, GL_POSITION, position0);
 
 	// Draw stuff
-	
+	glTranslated(translateX, translateY, translateZ);
 	glPushMatrix();
 		glMultMatrixd(root->get_transform().transpose().begin());
 		root->walk_gl();
@@ -167,20 +174,66 @@ bool Viewer::on_configure_event(GdkEventConfigure* event)
 
 bool Viewer::on_button_press_event(GdkEventButton* event)
 {
-  std::cerr << "Stub: Button " << event->button << " pressed" << std::endl;
-  return true;
+	std::cerr << "Stub: Button " << event->button << " pressed" << std::endl;
+	startPos[0] = event->x;
+	startPos[1] = event->y;
+	if (event->button == 1)
+		mb1 = true;
+	else if (event->button == 2)
+		mb2 = true;
+	else if (event->button == 3)
+		mb3 = true;
+	
+	return true;
 }
 
 bool Viewer::on_button_release_event(GdkEventButton* event)
 {
-  std::cerr << "Stub: Button " << event->button << " released" << std::endl;
-  return true;
+	std::cerr << "Stub: Button " << event->button << " released" << std::endl;
+	
+	if (event->button == 1)
+		mb1 = false;
+	else if (event->button == 2)
+		mb2 = false;
+	else if (event->button == 3)
+		mb3 = false;
+	
+	return true;
 }
 
 bool Viewer::on_motion_notify_event(GdkEventMotion* event)
 {
-  std::cerr << "Stub: Motion at " << event->x << ", " << event->y << std::endl;
-  return true;
+	std::cerr << "Stub: Motion at " << event->x << ", " << event->y << std::endl;
+	Matrix4x4 temp;
+	// Change in x
+	double x2x1 = event->x - startPos[0];
+	double y2y1 = event->y - startPos[1];
+	// Scale it down a bit
+	x2x1 /= 100;
+	y2y1 /= 100;
+	if (currMode == MODEL_TRANSLATE)
+	{		
+		int i = 0;
+		if (mb1)
+		{
+			translateX += x2x1;
+			translateY -= y2y1;
+		}
+		else if (mb2)
+		{
+			translateZ -= y2y1;
+		}
+		else if (mb3)	
+		{
+
+		}
+		//root->set_transform(root->get_transform().transpose() * temp);
+		
+	}
+	startPos[0] = event->x;
+	startPos[1] = event->y;
+	invalidate();
+	return true;
 }
 
 void Viewer::draw_trackball_circle()
