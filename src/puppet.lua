@@ -37,9 +37,19 @@ shouldersNode:add_child(shoulders)
 shoulders:scale(2.35, 0.5, 1)
 shoulders:set_material(blue)
 
+
+-- left upperArm shoulder joint node
+lUpperArmShoulderJointNode = gr.node('lUpperArmShoulderJointNode')
+shouldersNode:add_child(lUpperArmShoulderJointNode)
+
+-- Construct left upperarm shoulder joint
+lUpperArmShoulderJoint = gr.joint('lUpperArmShoulderJoint', {0.0, 0.0, 0.0}, {0.0, 0.0, 180.0})
+--lUpperArmShoulderJoint:set_joint_x(0.0, 0.0, 0.0)
+--lUpperArmShoulderJoint:set_joint_y(0.0, 0.0, 180.0)
+
 -- Left upper Arm node
 leftUpperArmNode = gr.node('leftUpperArmNode')
-shouldersNode:add_child(leftUpperArmNode)
+lUpperArmShoulderJointNode:add_child(leftUpperArmNode)
 
 -- Construct left upper arm
 leftUpperArm = gr.sphere('leftUpperArm')
