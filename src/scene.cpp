@@ -2,7 +2,7 @@
 #include <iostream>
 #include <GL/gl.h>
 #include <GL/glu.h>
-
+#include <math.h>
 
 using namespace std;
 SceneNode::SceneNode(const std::string& name)
@@ -22,10 +22,11 @@ void SceneNode::walk_gl(bool picking) const
 	for ( i = temp.begin() ; i != temp.end(); i++ )
 	{
 		glPushMatrix();
-			glMultMatrixd((*i)->get_transform().transpose().begin());
-			(*i)->walk_gl(picking);
+		glMultMatrixd((*i)->get_transform().transpose().begin());
+		(*i)->walk_gl(picking);
 		glPopMatrix();
 	}
+	
 	
 }
 
@@ -33,6 +34,7 @@ void SceneNode::rotate(char axis, double angle)
 {
 	std::cerr << "Stub: Rotate " << m_name << " around " << axis << " by " << angle << std::endl;
 	Matrix4x4 temp;
+	angle = angle * M_PI / 180.0;
 	if (axis == 'x')
 	{
 		temp[1][2] = -1 * sin(angle);
@@ -40,14 +42,14 @@ void SceneNode::rotate(char axis, double angle)
 		temp[2][2] = cos(angle);
 		temp[2][1] = sin(angle);
 	}
-	else if (axis == 'y')
+	else if (axis == 'z')
 	{
 		temp[0][1] = -1 * sin(angle);
 		temp[0][0] = cos(angle);
 		temp[1][1] = cos(angle);
 		temp[1][0] = sin(angle);
 	}
-	else if (axis == 'z')
+	else if (axis == 'y')
 	{
 		temp[2][0] = -1 * sin(angle);
 		temp[0][0] = cos(angle);
@@ -62,17 +64,23 @@ void SceneNode::scale(const Vector3D& amount)
 	std::cerr << "Stub: Scale " << m_name << " by " << amount << std::endl;
 	
 	// Fill me in
-	m_trans[0][0] *= amount[0];
-	m_trans[1][1] *= amount[1];
-	m_trans[2][2] *= amount[2];
+	Matrix4x4 temp;
+	temp[0][0] = amount[0];
+	temp[1][1] = amount[1];
+	temp[2][2] = amount[2];
+
+	m_trans = m_trans * temp;
 }
 
 void SceneNode::translate(const Vector3D& amount)
 {
 	std::cerr << "Stub: Translate " << m_name << " by " << amount << std::endl;
- 	m_trans[0][3] += amount[0];
-	m_trans[1][3] += amount[1];
-	m_trans[2][3] += amount[2];
+	Matrix4x4 temp;
+ 	temp[0][3] += amount[0];
+	temp[1][3] += amount[1];
+	temp[2][3] += amount[2];
+
+	m_trans = m_trans * temp;
 }
 
 bool SceneNode::is_joint() const
