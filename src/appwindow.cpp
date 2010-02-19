@@ -1,6 +1,7 @@
 #include "appwindow.hpp"
 
-AppWindow::AppWindow()
+AppWindow::AppWindow(std::string filename) :
+	m_viewer(filename)
 {
   set_title("Advanced Ergonomics Laboratory");
 

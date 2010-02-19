@@ -3,10 +3,11 @@
 
 #include <gtkmm.h>
 #include "viewer.hpp"
+#include <iostream>
 
 class AppWindow : public Gtk::Window {
 public:
-  AppWindow();
+  AppWindow(std::string filename);
   
 protected:
 

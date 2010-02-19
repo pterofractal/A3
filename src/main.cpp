@@ -16,15 +16,17 @@ int main(int argc, char** argv)
   if (argc >= 2) {
     filename = argv[1];
   }
+  
+/*
   // This is how you might import a scene.
   SceneNode* root = import_lua(filename);
   if (!root) {
     std::cerr << "Could not open " << filename << std::endl;
     return 1;
   }
-  
+*/
   // Construct our (only) window
-  AppWindow window;
+  AppWindow window(filename);
 
   // And run the application!
   Gtk::Main::run(window);

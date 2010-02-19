@@ -5,7 +5,7 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-Viewer::Viewer()
+Viewer::Viewer(std::string filename)
 {
   Glib::RefPtr<Gdk::GL::Config> glconfig;
 
@@ -32,6 +32,13 @@ Viewer::Viewer()
              Gdk::BUTTON_PRESS_MASK      | 
              Gdk::BUTTON_RELEASE_MASK    |
              Gdk::VISIBILITY_NOTIFY_MASK);
+
+
+	root = import_lua(filename);
+	if (!root)
+	{
+		std::cerr << "Could not open " << filename << std::endl;
+	}
 }
 
 Viewer::~Viewer()
@@ -69,39 +76,68 @@ void Viewer::on_realize()
 
 bool Viewer::on_expose_event(GdkEventExpose* event)
 {
-  Glib::RefPtr<Gdk::GL::Drawable> gldrawable = get_gl_drawable();
+	Glib::RefPtr<Gdk::GL::Drawable> gldrawable = get_gl_drawable();
+	
+	if (!gldrawable) return false;
+	
+	if (!gldrawable->gl_begin(get_gl_context()))
+		return false;
+	
+	// Set up for perspective drawing 
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glViewport(0, 0, get_width(), get_height());
+	gluPerspective(40.0, (GLfloat)get_width()/(GLfloat)get_height(), 0.1, 1000.0);
+	
+	// change to model view for drawing
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	
+	// Clear framebuffer
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
+	// Set up lighting
+	// set up lighting (if necessary)
+	// Followed the tutorial found http://www.falloutsoftware.com/tutorials/gl/gl8.htm
+	// to implement lighting
+	
+	// Initialize lighting settings
+	glShadeModel(GL_SMOOTH);
+	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+	glEnable(GL_LIGHTING);
+	
+	// Create one light source
+	glEnable(GL_LIGHT0);
+	glEnable(GL_COLOR_MATERIAL);
+	glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
+	// Define properties of light 
+	float ambientLight0[] = { 0.3f, 0.3f, 0.3f, 1.0f };
+	float diffuseLight0[] = { 0.8f, 0.8f, 0.8f, 1.0f };
+	float specularLight0[] = { 0.6f, 0.6f, 0.6f, 1.0f };
+	float position0[] = { 5.0f, 0.0f, 0.0f, 1.0f };	
+	glLightfv(GL_LIGHT0, GL_AMBIENT, ambientLight0);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuseLight0);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, specularLight0);
+	glLightfv(GL_LIGHT0, GL_POSITION, position0);
 
-  if (!gldrawable) return false;
+	// Draw stuff
+	
+	glPushMatrix();
+		glMultMatrixd(root->get_transform().transpose().begin());
+		root->walk_gl();
+	glPopMatrix();
+	draw_trackball_circle();
 
-  if (!gldrawable->gl_begin(get_gl_context()))
-    return false;
+	
 
-  // Set up for perspective drawing 
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glViewport(0, 0, get_width(), get_height());
-  gluPerspective(40.0, (GLfloat)get_width()/(GLfloat)get_height(), 0.1, 1000.0);
-
-  // change to model view for drawing
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-
-  // Clear framebuffer
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  // Set up lighting
-
-  // Draw stuff
-
-  draw_trackball_circle();
-
-  // Swap the contents of the front and back buffers so we see what we
-  // just drew. This should only be done if double buffering is enabled.
-  gldrawable->swap_buffers();
-
-  gldrawable->gl_end();
-
-  return true;
+	
+	// Swap the contents of the front and back buffers so we see what we
+	// just drew. This should only be done if double buffering is enabled.
+	gldrawable->swap_buffers();
+	
+	gldrawable->gl_end();
+	
+	return true;
 }
 
 bool Viewer::on_configure_event(GdkEventConfigure* event)
@@ -109,7 +145,7 @@ bool Viewer::on_configure_event(GdkEventConfigure* event)
   Glib::RefPtr<Gdk::GL::Drawable> gldrawable = get_gl_drawable();
 
   if (!gldrawable) return false;
-  
+
   if (!gldrawable->gl_begin(get_gl_context()))
     return false;
 
@@ -122,9 +158,8 @@ bool Viewer::on_configure_event(GdkEventConfigure* event)
   gluPerspective(40.0, (GLfloat)event->width/(GLfloat)event->height, 0.1, 1000.0);
 
   // Reset to modelview matrix mode
-  
-  glMatrixMode(GL_MODELVIEW);
 
+  glMatrixMode(GL_MODELVIEW); 
   gldrawable->gl_end();
 
   return true;
