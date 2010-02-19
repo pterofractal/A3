@@ -6,7 +6,11 @@
 
 using namespace std;
 SceneNode::SceneNode(const std::string& name)
-  : m_name(name)
+  : m_name(name),
+	rotX(0),
+	rotY(0),
+	rotZ(0),
+	m_parent(NULL)
 {
 }
 
@@ -30,32 +34,56 @@ void SceneNode::walk_gl(bool picking) const
 	
 }
 
+SceneNode* SceneNode::get_child(std::string childName)
+{
+	ChildList temp = m_children;
+	ChildList::iterator i;
+	SceneNode *child;
+	if (m_name == childName)
+	{
+		std::cerr << "Found " << m_name << "\n";
+		return this;	
+	}
+	else
+	{
+		for ( i = temp.begin() ; i != temp.end(); i++ )
+		{				
+			child = (*i)->get_child(childName);
+			if (child != NULL)
+				return child;
+		}
+	}
+	return NULL;
+}
 void SceneNode::rotate(char axis, double angle)
 {
 	std::cerr << "Stub: Rotate " << m_name << " around " << axis << " by " << angle << std::endl;
 	Matrix4x4 temp;
-	angle = angle * M_PI / 180.0;
+	double radAngle = angle * M_PI / 180.0;
 	if (axis == 'x')
 	{
-		temp[1][2] = -1 * sin(angle);
-		temp[1][1] = cos(angle);
-		temp[2][2] = cos(angle);
-		temp[2][1] = sin(angle);
-	}
-	else if (axis == 'z')
-	{
-		temp[0][1] = -1 * sin(angle);
-		temp[0][0] = cos(angle);
-		temp[1][1] = cos(angle);
-		temp[1][0] = sin(angle);
+		rotX += angle;
+		temp[1][2] = -1 * sin(radAngle);
+		temp[1][1] = cos(radAngle);
+		temp[2][2] = cos(radAngle);
+		temp[2][1] = sin(radAngle);
 	}
 	else if (axis == 'y')
 	{
-		temp[2][0] = -1 * sin(angle);
-		temp[0][0] = cos(angle);
-		temp[2][2] = cos(angle);
-		temp[0][2] = sin(angle);
-	} 
+		rotY += angle;
+		temp[2][0] = -1 * sin(radAngle);
+		temp[0][0] = cos(radAngle);
+		temp[2][2] = cos(radAngle);
+		temp[0][2] = sin(radAngle);
+	}
+	else if (axis == 'z')
+	{
+		rotZ += angle;
+		temp[0][1] = -1 * sin(radAngle);
+		temp[0][0] = cos(radAngle);
+		temp[1][1] = cos(radAngle);
+		temp[1][0] = sin(radAngle);
+	}
 	m_trans = m_trans * temp;
 }
 

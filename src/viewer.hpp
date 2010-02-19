@@ -5,7 +5,7 @@
 #include <gtkglmm.h>
 #include <iostream>
 #include "scene_lua.hpp"
-
+#include "scene.hpp"
 // The "main" OpenGL widget
 class Viewer : public Gtk::GL::DrawingArea {
 public:

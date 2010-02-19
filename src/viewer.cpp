@@ -209,8 +209,8 @@ bool Viewer::on_motion_notify_event(GdkEventMotion* event)
 	double x2x1 = event->x - startPos[0];
 	double y2y1 = event->y - startPos[1];
 	// Scale it down a bit
-	x2x1 /= 100;
-	y2y1 /= 100;
+	x2x1 /= 100.0;
+	y2y1 /= 100.0;
 	if (currMode == MODEL_TRANSLATE)
 	{		
 		int i = 0;
@@ -225,7 +225,21 @@ bool Viewer::on_motion_notify_event(GdkEventMotion* event)
 		}
 		else if (mb3)	
 		{
-
+			SceneNode *child = root->get_child("lUpperArmShoulderJoint");
+			if (child != NULL)
+			{
+				double minX = ((JointNode *) child)->get_min_x();
+				double maxX = ((JointNode *) child)->get_max_x();
+				double currRotX = child->get_parent()->getRotX();
+				std::cerr << minX << "\t" << currRotX << "\t" << maxX << std::endl;
+				if (currRotX + y2y1 > maxX || currRotX + y2y1 < minX)
+					return true;
+				
+				y2y1 *= 10;
+				child->get_parent()->rotate('x', y2y1);
+				
+				//child->rotate('y', y2y1);
+			}
 		}
 		//root->set_transform(root->get_transform().transpose() * temp);
 		

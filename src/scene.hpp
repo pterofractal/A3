@@ -8,58 +8,77 @@
 
 class SceneNode {
 public:
-  SceneNode(const std::string& name);
-  virtual ~SceneNode();
+	SceneNode(const std::string& name);
+	virtual ~SceneNode();
 
-  virtual void walk_gl(bool picking = false) const;
+	virtual void walk_gl(bool picking = false) const;
 
-  const Matrix4x4& get_transform() const { return m_trans; }
-  const Matrix4x4& get_inverse() const { return m_invtrans; }
-  
-  void set_transform(const Matrix4x4& m)
-  {
-    m_trans = m;
-    m_invtrans = m.invert();
-  }
+	const Matrix4x4& get_transform() const { return m_trans; }
+	const Matrix4x4& get_inverse() const { return m_invtrans; }
 
-  void set_transform(const Matrix4x4& m, const Matrix4x4& i)
-  {
-    m_trans = m;
-    m_invtrans = i;
-  }
+	void set_transform(const Matrix4x4& m)
+	{
+		m_trans = m;
+		m_invtrans = m.invert();
+	}
 
-  void add_child(SceneNode* child)
-  {
-    m_children.push_back(child);
-  }
+	void set_transform(const Matrix4x4& m, const Matrix4x4& i)
+	{
+		m_trans = m;
+		m_invtrans = i;
+	}
 
-  void remove_child(SceneNode* child)
-  {
-    m_children.remove(child);
-  }
+	void add_child(SceneNode* child)
+	{
+		m_children.push_back(child);
+		child->set_parent(this);
+	}
 
-  // Callbacks to be implemented.
-  // These will be called from Lua.
-  void rotate(char axis, double angle);
-  void scale(const Vector3D& amount);
-  void translate(const Vector3D& amount);
+	void remove_child(SceneNode* child)
+	{
+		m_children.remove(child);
+	}
 
+	void set_parent (SceneNode *parent)
+	{
+		m_parent = parent;
+	}
+	
+	SceneNode* get_parent()
+	{
+		return m_parent;
+	}
+	
+	double getRotX()
+	{
+		return rotX;
+	}
+	
+	// Callbacks to be implemented.
+	// These will be called from Lua.
+	void rotate(char axis, double angle);
+	void scale(const Vector3D& amount);
+	void translate(const Vector3D& amount);
+
+	SceneNode* get_child(std::string childName);
   // Returns true if and only if this node is a JointNode
   virtual bool is_joint() const;
   
 protected:
   
-  // Useful for picking
-  int m_id;
-  std::string m_name;
+	// Useful for picking
+	int m_id;
+	std::string m_name;
 
-  // Transformations
-  Matrix4x4 m_trans;
-  Matrix4x4 m_invtrans;
-
-  // Hierarchy
-  typedef std::list<SceneNode*> ChildList;
-  ChildList m_children;
+	// Transformations
+	Matrix4x4 m_trans;
+	Matrix4x4 m_invtrans;
+	double rotX, rotY, rotZ;
+	
+  	// Hierarchy
+  	typedef std::list<SceneNode*> ChildList;
+  	ChildList m_children;
+	SceneNode* m_parent;
 };
 
 class JointNode : public SceneNode {
@@ -77,8 +96,16 @@ public:
   struct JointRange {
     double min, init, max;
   };
-
+	
+	double get_min_x()
+	{
+		return m_joint_x.min;
+	}
   
+	double get_max_x()
+	{
+		return m_joint_x.max;
+	}
 protected:
 
   JointRange m_joint_x, m_joint_y;
