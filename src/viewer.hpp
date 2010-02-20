@@ -53,7 +53,8 @@ bool mb1, mb2, mb3;
 Point2D startPos;
 Mode currMode;
 double translateX, translateY, translateZ;
-
+GLuint sphere;
+GLUquadricObj *q;
 };
 
 #endif

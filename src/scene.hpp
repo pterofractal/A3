@@ -32,6 +32,7 @@ public:
 	{
 		m_children.push_back(child);
 		child->set_parent(this);
+		child->set_id(m_id);
 	}
 
 	void remove_child(SceneNode* child)
@@ -52,6 +53,16 @@ public:
 	double getRotX()
 	{
 		return rotX;
+	}
+	
+	int get_id()
+	{
+		return m_id;
+	}
+	
+	void set_id(int newId)
+	{
+		m_id = newId;
 	}
 	
 	// Callbacks to be implemented.

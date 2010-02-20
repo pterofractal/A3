@@ -78,6 +78,21 @@ void Viewer::on_realize()
   glClearColor( 0.4, 0.4, 0.4, 0.0 );
   glEnable(GL_DEPTH_TEST);
 
+	sphere = glGenLists(1);
+	if (sphere == 0)
+	{
+		std::cerr << "Something is bruck\n";
+	}
+	std::cerr << "\n\n\n\n" << sphere << "\n\n\n\n";
+	glNewList(sphere, GL_COMPILE);
+		q = gluNewQuadric();	// Create A New Quadratic
+		gluQuadricNormals(q, GL_SMOOTH);	// Generate Smooth Normals For The Quad
+		gluQuadricTexture(q, GL_TRUE);		// Enable Texture Coords For The Quad
+		gluSphere(q, 1.0f, 32, 32);
+	glEndList();
+	
+	root->set_id(sphere);
+
   gldrawable->gl_end();
 }
 

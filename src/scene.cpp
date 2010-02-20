@@ -153,7 +153,8 @@ GeometryNode::GeometryNode(const std::string& name, Primitive* primitive)
   : SceneNode(name),
     m_primitive(primitive)
 {
-	cerr << "Created a new sphere " << name << "\n";
+	m_primitive->set_displayListId(m_id);
+	cerr << "Created a new sphere " << name << "\t" << m_id << "b\n";
 }
 
 GeometryNode::~GeometryNode()
