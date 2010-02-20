@@ -79,11 +79,6 @@ void Viewer::on_realize()
   glEnable(GL_DEPTH_TEST);
 
 	sphere = glGenLists(1);
-	if (sphere == 0)
-	{
-		std::cerr << "Something is bruck\n";
-	}
-	std::cerr << "\n\n\n\n" << sphere << "\n\n\n\n";
 	glNewList(sphere, GL_COMPILE);
 		q = gluNewQuadric();	// Create A New Quadratic
 		gluQuadricNormals(q, GL_SMOOTH);	// Generate Smooth Normals For The Quad
@@ -189,7 +184,7 @@ bool Viewer::on_configure_event(GdkEventConfigure* event)
 
 bool Viewer::on_button_press_event(GdkEventButton* event)
 {
-	std::cerr << "Stub: Button " << event->button << " pressed" << std::endl;
+//	std::cerr << "Stub: Button " << event->button << " pressed" << std::endl;
 	startPos[0] = event->x;
 	startPos[1] = event->y;
 	if (event->button == 1)
@@ -199,12 +194,42 @@ bool Viewer::on_button_press_event(GdkEventButton* event)
 	else if (event->button == 3)
 		mb3 = true;
 	
+	
+	
+	
+	GLuint buff[2] = {0};
+ 	GLint hits, view[4];
+	glSelectBuffer(2,buff);
+	glRenderMode(GL_SELECT);
+	glInitNames();
+	glPushName(0);
+	glPopName();
+	glGetIntegerv(GL_VIEWPORT, view);
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	gluPickMatrix(event->x,event->y, 10.0, 10.0, view);
+	gluPerspective(40.0, (GLfloat)get_width()/(GLfloat)get_height(), 0.1, 1000.0);
+	
+	glMatrixMode(GL_MODELVIEW);
+	
+		glMultMatrixd(root->get_transform().transpose().begin());
+		root->walk_gl(true);
+	
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glFlush();
+//	glMatrixMode(GL_MODELVIEW);
+	hits = glRenderMode(GL_RENDER);
+	
+	std::cerr << "Hits " << hits << std::endl;
+	
 	return true;
 }
 
 bool Viewer::on_button_release_event(GdkEventButton* event)
 {
-	std::cerr << "Stub: Button " << event->button << " released" << std::endl;
+//	std::cerr << "Stub: Button " << event->button << " released" << std::endl;
 	
 	if (event->button == 1)
 		mb1 = false;
@@ -218,7 +243,7 @@ bool Viewer::on_button_release_event(GdkEventButton* event)
 
 bool Viewer::on_motion_notify_event(GdkEventMotion* event)
 {
-	std::cerr << "Stub: Motion at " << event->x << ", " << event->y << std::endl;
+//	std::cerr << "Stub: Motion at " << event->x << ", " << event->y << std::endl;
 	Matrix4x4 temp;
 	// Change in x
 	double x2x1 = event->x - startPos[0];
@@ -246,7 +271,7 @@ bool Viewer::on_motion_notify_event(GdkEventMotion* event)
 				double minX = ((JointNode *) child)->get_min_x();
 				double maxX = ((JointNode *) child)->get_max_x();
 				double currRotX = child->get_parent()->getRotX();
-				std::cerr << minX << "\t" << currRotX << "\t" << maxX << std::endl;
+//				std::cerr << minX << "\t" << currRotX << "\t" << maxX << std::endl;
 				if (currRotX + y2y1 > maxX || currRotX + y2y1 < minX)
 					return true;
 				

@@ -23,11 +23,21 @@ void SceneNode::walk_gl(bool picking) const
 	// Fill me in
 	ChildList temp = m_children;
 	ChildList::iterator i;
+	std::cerr << m_name << " \t " << m_id << "\n";
 	for ( i = temp.begin() ; i != temp.end(); i++ )
 	{
+		std::cerr << "\t";
+
+		if(picking)
+			glLoadName(m_id);
+
 		glPushMatrix();
 		glMultMatrixd((*i)->get_transform().transpose().begin());
 		(*i)->walk_gl(picking);
+
+		if (picking)
+			glPopName();
+
 		glPopMatrix();
 	}
 	
@@ -41,13 +51,13 @@ SceneNode* SceneNode::get_child(std::string childName)
 	SceneNode *child;
 	if (m_name == childName)
 	{
-		std::cerr << "Found " << m_name << "\n";
+//		std::cerr << "Found " << m_name << "\n";
 		return this;	
 	}
 	else
 	{
 		for ( i = temp.begin() ; i != temp.end(); i++ )
-		{				
+		{			
 			child = (*i)->get_child(childName);
 			if (child != NULL)
 				return child;
@@ -57,7 +67,7 @@ SceneNode* SceneNode::get_child(std::string childName)
 }
 void SceneNode::rotate(char axis, double angle)
 {
-	std::cerr << "Stub: Rotate " << m_name << " around " << axis << " by " << angle << std::endl;
+//	std::cerr << "Stub: Rotate " << m_name << " around " << axis << " by " << angle << std::endl;
 	Matrix4x4 temp;
 	double radAngle = angle * M_PI / 180.0;
 	if (axis == 'x')
@@ -89,7 +99,7 @@ void SceneNode::rotate(char axis, double angle)
 
 void SceneNode::scale(const Vector3D& amount)
 {
-	std::cerr << "Stub: Scale " << m_name << " by " << amount << std::endl;
+//	std::cerr << "Stub: Scale " << m_name << " by " << amount << std::endl;
 	
 	// Fill me in
 	Matrix4x4 temp;
@@ -102,7 +112,7 @@ void SceneNode::scale(const Vector3D& amount)
 
 void SceneNode::translate(const Vector3D& amount)
 {
-	std::cerr << "Stub: Translate " << m_name << " by " << amount << std::endl;
+//	std::cerr << "Stub: Translate " << m_name << " by " << amount << std::endl;
 	Matrix4x4 temp;
  	temp[0][3] += amount[0];
 	temp[1][3] += amount[1];
@@ -154,7 +164,7 @@ GeometryNode::GeometryNode(const std::string& name, Primitive* primitive)
     m_primitive(primitive)
 {
 	m_primitive->set_displayListId(m_id);
-	cerr << "Created a new sphere " << name << "\t" << m_id << "b\n";
+//	cerr << "Created a new sphere " << name << "\t" << m_id << "b\n";
 }
 
 GeometryNode::~GeometryNode()
@@ -166,7 +176,12 @@ void GeometryNode::walk_gl(bool picking) const
 	// Fill me in
 	glPushMatrix();
 		m_material->apply_gl();
-		m_primitive->walk_gl(picking);		
+		if (picking)
+			glPushName(m_id);
+		std::cerr << "\t\t" <<  m_name << " \t " << m_id << "\n";
+		m_primitive->walk_gl(picking);	
+		if (picking)
+			glPopName();
 	glPopMatrix();
 }
  
