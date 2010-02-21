@@ -5,11 +5,13 @@
 #include <math.h>
 
 using namespace std;
+int counter = 0;
 SceneNode::SceneNode(const std::string& name)
   : m_name(name),
 	rotX(0),
 	rotY(0),
 	rotZ(0),
+	m_id(counter++),
 	m_parent(NULL)
 {
 }
@@ -23,14 +25,19 @@ void SceneNode::walk_gl(bool picking) const
 	// Fill me in
 	ChildList temp = m_children;
 	ChildList::iterator i;
+	SceneNode *tempNode = m_parent;
+	while (tempNode != NULL)
+	{
+		std::cerr << "\t";
+		tempNode = tempNode->m_parent;
+	}
+	
 	std::cerr << m_name << " \t " << m_id << "\n";
 	for ( i = temp.begin() ; i != temp.end(); i++ )
 	{
-		std::cerr << "\t";
-
 		if(picking)
 			glLoadName(m_id);
-
+		
 		glPushMatrix();
 		glMultMatrixd((*i)->get_transform().transpose().begin());
 		(*i)->walk_gl(picking);

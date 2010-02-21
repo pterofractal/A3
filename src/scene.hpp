@@ -32,7 +32,6 @@ public:
 	{
 		m_children.push_back(child);
 		child->set_parent(this);
-		child->set_id(m_children.size());
 	}
 
 	void remove_child(SceneNode* child)

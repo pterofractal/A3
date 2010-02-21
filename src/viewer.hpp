@@ -48,6 +48,8 @@ protected:
   void draw_trackball_circle();
   
 private:
+void draw_puppet(bool picking = false);
+
 SceneNode *root;
 bool mb1, mb2, mb3;
 Point2D startPos;
@@ -55,6 +57,8 @@ Mode currMode;
 double translateX, translateY, translateZ;
 GLuint sphere;
 GLUquadricObj *q;
+bool picking;
+
 };
 
 #endif

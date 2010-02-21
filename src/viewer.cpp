@@ -46,6 +46,7 @@ Viewer::Viewer(std::string filename)
 translateX = 0;
 translateY = 0;
 translateZ = 0;
+picking = false;
 }
 
 Viewer::~Viewer()
@@ -99,7 +100,7 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
 	
 	if (!gldrawable->gl_begin(get_gl_context()))
 		return false;
-	
+		
 	// Set up for perspective drawing 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -138,15 +139,8 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
 	glLightfv(GL_LIGHT0, GL_POSITION, position0);
 
 	// Draw stuff
-	glTranslated(translateX, translateY, translateZ);
-	glPushMatrix();
-		glMultMatrixd(root->get_transform().transpose().begin());
-		root->walk_gl();
-	glPopMatrix();
+	draw_puppet();
 	draw_trackball_circle();
-
-	
-
 	
 	// Swap the contents of the front and back buffers so we see what we
 	// just drew. This should only be done if double buffering is enabled.
@@ -154,6 +148,7 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
 	
 	gldrawable->gl_end();
 	
+	picking = false;
 	return true;
 }
 
@@ -194,9 +189,6 @@ bool Viewer::on_button_press_event(GdkEventButton* event)
 	else if (event->button == 3)
 		mb3 = true;
 	
-	
-	
-	
 	GLuint buff[2] = {0};
  	GLint hits, view[4];
 	glSelectBuffer(2,buff);
@@ -213,8 +205,7 @@ bool Viewer::on_button_press_event(GdkEventButton* event)
 	
 	glMatrixMode(GL_MODELVIEW);
 	
-		glMultMatrixd(root->get_transform().transpose().begin());
-		root->walk_gl(true);
+		draw_puppet(true);
 	
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
@@ -326,4 +317,13 @@ void Viewer::draw_trackball_circle()
   glEnd();
   glColor3f(0.0, 0.0, 0.0);
   glDisable(GL_LINE_SMOOTH);
+}
+
+void Viewer::draw_puppet(bool picking)
+{
+	glTranslated(translateX, translateY, translateZ);
+	glPushMatrix();
+		glMultMatrixd(root->get_transform().transpose().begin());
+		root->walk_gl(picking);
+	glPopMatrix();
 }
