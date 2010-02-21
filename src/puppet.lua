@@ -74,9 +74,17 @@ leftForearmNode:add_child(leftForearm)
 leftForearm:scale(0.2, 0.6, 0.2)
 leftForearm:set_material(yellow)
 
+-- left hand forearm joint node
+lHandForearmJointNode = gr.node('lHandForearmJointNode')
+leftForearmNode:add_child(lHandForearmJointNode)
+
+-- left hand forearm joint
+lHandForearmJoint = gr.joint('lHandForearmJoint', {-130.0, 0.0, 0.0}, {0.0, 0.0, 0.0})
+lHandForearmJointNode:add_child(lHandForearmJoint)
+
 -- Left Hand node
 leftHandNode = gr.node('leftHand')
-leftForearmNode:add_child(leftHandNode)
+lHandForearmJointNode:add_child(leftHandNode)
 
 -- Construct left hand
 leftHand = gr.sphere('leftHand')
@@ -141,9 +149,10 @@ headNode:translate(0, 0.6, 0)
 rightHandNode:translate(0, -1, 0)
 rightForearmNode:translate(0, -1, 0)
 rightUpperArmNode:translate(2.0, -1, 0.0)
-leftHandNode:translate(0, -1, 0)
-leftForearmNode:translate(0, -1.4, 0)
---lForearmUpperArmJointNode:translate(0, -1.4, 0)
+leftHandNode:translate(0, -0.3, 0)
+lHandForearmJointNode:translate(0, -0.3, 0.0)
+leftForearmNode:translate(0, -0.7, 0)
+lForearmUpperArmJointNode:translate(0, -0.7, 0)
 leftUpperArmNode:translate(-2.0, -1, 0.0)
 shouldersNode:translate(0, 1.7, 0.0)
 rootnode:translate(0.0, 0.0, -10.0)

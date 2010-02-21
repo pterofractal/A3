@@ -75,9 +75,10 @@ void Viewer::on_realize()
   if (!gldrawable->gl_begin(get_gl_context()))
     return;
 
-  glShadeModel(GL_SMOOTH);
-  glClearColor( 0.4, 0.4, 0.4, 0.0 );
-  glEnable(GL_DEPTH_TEST);
+	glShadeModel(GL_SMOOTH);
+	glClearColor( 0.4, 0.4, 0.4, 0.0 );
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
 
 	sphere = glGenLists(1);
 	glNewList(sphere, GL_COMPILE);
