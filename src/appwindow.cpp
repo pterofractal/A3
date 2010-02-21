@@ -29,7 +29,7 @@ AppWindow::AppWindow(std::string filename) :
 
   // Put the viewer below the menubar. pack_start "grows" the widget
   // by default, so it'll take up the rest of the window.
-  m_viewer.set_size_request(300, 300);
+  m_viewer.set_size_request(600, 600);
   m_vbox.pack_start(m_viewer);
 
   show_all();

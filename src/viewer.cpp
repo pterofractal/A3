@@ -46,7 +46,7 @@ Viewer::Viewer(std::string filename)
 translateX = 0;
 translateY = 0;
 translateZ = 0;
-picking = false;
+pickedObj = NULL;
 }
 
 Viewer::~Viewer()
@@ -114,11 +114,7 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
 	// Clear framebuffer
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-	// Set up lighting
-	// set up lighting (if necessary)
-	// Followed the tutorial found http://www.falloutsoftware.com/tutorials/gl/gl8.htm
-	// to implement lighting
-	
+	// Set up lighting	
 	// Initialize lighting settings
 	glShadeModel(GL_SMOOTH);
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
@@ -148,7 +144,6 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
 	
 	gldrawable->gl_end();
 	
-	picking = false;
 	return true;
 }
 
@@ -189,31 +184,71 @@ bool Viewer::on_button_press_event(GdkEventButton* event)
 	else if (event->button == 3)
 		mb3 = true;
 	
-	GLuint buff[2] = {0};
+	GLuint buff[128] = {0};
  	GLint hits, view[4];
-	glSelectBuffer(2,buff);
+
+	glSelectBuffer(128,buff);
 	glRenderMode(GL_SELECT);
-	glInitNames();
-	glPushName(0);
-	glPopName();
-	glGetIntegerv(GL_VIEWPORT, view);
+
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	glLoadIdentity();
-	gluPickMatrix(event->x,event->y, 10.0, 10.0, view);
+
+	glGetIntegerv(GL_VIEWPORT,view);
+	gluPickMatrix(event->x, view[3] - event->y, 1, 1, view);
 	gluPerspective(40.0, (GLfloat)get_width()/(GLfloat)get_height(), 0.1, 1000.0);
-	
 	glMatrixMode(GL_MODELVIEW);
-	
+	glLoadIdentity();
+	glInitNames();
+	glPushName(0);
 		draw_puppet(true);
-	
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
 	glFlush();
-//	glMatrixMode(GL_MODELVIEW);
+
+	// returning to normal rendering mode
 	hits = glRenderMode(GL_RENDER);
+
+	// if there are hits process them
 	
 	std::cerr << "Hits " << hits << std::endl;
+	
+	if (hits > 0)
+	{
+		
+		unsigned int i, j;
+		GLuint names, *ptr, minZ,*ptrNames, numberOfNames;
+
+		printf ("hits = %d\n", hits);
+		ptr = (GLuint *) buff;
+		minZ = 0xffffffff;
+		for (i = 0; i < hits; i++) 
+		{	
+			names = *ptr;
+			ptr++;
+			if (*ptr < minZ) 
+			{
+				numberOfNames = names;
+				minZ = *ptr;
+				ptrNames = ptr+2;
+			}
+
+			ptr += names+2;
+		}
+		printf ("The closest hit names are ");
+		ptr = ptrNames;
+		for (j = 0; j < numberOfNames; j++,ptr++) 
+		{
+			printf ("%d ", *ptr);
+		}
+		ptr--;
+		int pickedObjId = *ptr;
+		std::cerr << "pickedObjId " << pickedObjId << std::endl;
+		pickedObj = root->get_child(pickedObjId);
+		
+		printf ("\n");
+	}
 	
 	return true;
 }
@@ -256,18 +291,19 @@ bool Viewer::on_motion_notify_event(GdkEventMotion* event)
 		}
 		else if (mb3)	
 		{
-			SceneNode *child = root->get_child("lUpperArmShoulderJoint");
-			if (child != NULL)
+			if (pickedObj != NULL)
 			{
-				double minX = ((JointNode *) child)->get_min_x();
-				double maxX = ((JointNode *) child)->get_max_x();
-				double currRotX = child->get_parent()->getRotX();
-//				std::cerr << minX << "\t" << currRotX << "\t" << maxX << std::endl;
+//				std::cerr << "picked obj " << pickedObj->get_name() << std::endl;
+				SceneNode *joint = pickedObj->get_joint();
+				double minX = ((JointNode *) joint)->get_min_x();
+				double maxX = ((JointNode *) joint)->get_max_x();
+				double currRotX = joint->get_parent()->getRotX();
+				std::cerr << "Curr rot x " << currRotX << " adding " << y2y1 << " min " << minX << " \t max " << maxX << "\n";
 				if (currRotX + y2y1 > maxX || currRotX + y2y1 < minX)
 					return true;
 				
 				y2y1 *= 10;
-				child->get_parent()->rotate('x', y2y1);
+				joint->get_parent()->rotate('x', y2y1);
 				
 				//child->rotate('y', y2y1);
 			}

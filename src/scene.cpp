@@ -26,17 +26,10 @@ void SceneNode::walk_gl(bool picking) const
 	ChildList temp = m_children;
 	ChildList::iterator i;
 	SceneNode *tempNode = m_parent;
-	while (tempNode != NULL)
-	{
-		std::cerr << "\t";
-		tempNode = tempNode->m_parent;
-	}
-	
-	std::cerr << m_name << " \t " << m_id << "\n";
 	for ( i = temp.begin() ; i != temp.end(); i++ )
 	{
 		if(picking)
-			glLoadName(m_id);
+			glPushName(m_id);
 		
 		glPushMatrix();
 		glMultMatrixd((*i)->get_transform().transpose().begin());
@@ -71,6 +64,45 @@ SceneNode* SceneNode::get_child(std::string childName)
 		}
 	}
 	return NULL;
+}
+
+SceneNode* SceneNode::get_child(int id)
+{
+	ChildList temp = m_children;
+	ChildList::iterator i;
+	SceneNode *child;
+	std::cerr<<"\t\t" << m_id << "\t\t";
+	if (m_id == id)
+	{
+		return this;	
+	}
+	else
+	{
+		for ( i = temp.begin() ; i != temp.end(); i++ )
+		{			
+			child = (*i)->get_child(id);
+			if (child != NULL)
+				return child;
+		}
+	}
+	return NULL;
+}
+
+SceneNode* SceneNode::get_joint()
+{
+	if (m_parent == NULL)
+		return NULL;
+		
+	ChildList temp = m_parent->get_children();
+	ChildList::iterator i;
+	
+	for (i = temp.begin(); i != temp.end(); i++)
+	{
+		if ( (*i)->is_joint() )
+			return *i;
+	}
+	
+	return m_parent->get_joint();
 }
 void SceneNode::rotate(char axis, double angle)
 {
@@ -185,7 +217,6 @@ void GeometryNode::walk_gl(bool picking) const
 		m_material->apply_gl();
 		if (picking)
 			glPushName(m_id);
-		std::cerr << "\t\t" <<  m_name << " \t " << m_id << "\n";
 		m_primitive->walk_gl(picking);	
 		if (picking)
 			glPopName();

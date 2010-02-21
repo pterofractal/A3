@@ -58,7 +58,7 @@ double translateX, translateY, translateZ;
 GLuint sphere;
 GLUquadricObj *q;
 bool picking;
-
+SceneNode *pickedObj;
 };
 
 #endif

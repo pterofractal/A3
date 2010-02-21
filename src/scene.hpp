@@ -8,6 +8,7 @@
 
 class SceneNode {
 public:
+  	typedef std::list<SceneNode*> ChildList;
 	SceneNode(const std::string& name);
 	virtual ~SceneNode();
 
@@ -38,7 +39,12 @@ public:
 	{
 		m_children.remove(child);
 	}
-
+	
+	ChildList get_children()
+	{
+		return m_children;
+	}
+	
 	void set_parent (SceneNode *parent)
 	{
 		m_parent = parent;
@@ -64,6 +70,10 @@ public:
 		m_id = newId;
 	}
 	
+	std::string get_name()
+	{
+		return m_name;
+	}
 	// Callbacks to be implemented.
 	// These will be called from Lua.
 	void rotate(char axis, double angle);
@@ -71,6 +81,8 @@ public:
 	void translate(const Vector3D& amount);
 
 	SceneNode* get_child(std::string childName);
+	SceneNode* get_child(int id);
+	SceneNode* get_joint();
   // Returns true if and only if this node is a JointNode
   virtual bool is_joint() const;
   
@@ -86,7 +98,6 @@ protected:
 	double rotX, rotY, rotZ;
 	
   	// Hierarchy
-  	typedef std::list<SceneNode*> ChildList;
   	ChildList m_children;
 	SceneNode* m_parent;
 };

@@ -43,7 +43,7 @@ lUpperArmShoulderJointNode = gr.node('lUpperArmShoulderJointNode')
 shouldersNode:add_child(lUpperArmShoulderJointNode)
 
 -- Construct left upperarm shoulder joint
-lUpperArmShoulderJoint = gr.joint('lUpperArmShoulderJoint', {-180.0, 0.0, 180.0}, {0.0, 0.0, 180.0})
+lUpperArmShoulderJoint = gr.joint('lUpperArmShoulderJoint', {-180.0, 0.0, 60.0}, {0.0, 0.0, 0.0})
 lUpperArmShoulderJointNode:add_child(lUpperArmShoulderJoint)
 
 -- Left upper Arm node
@@ -56,14 +56,22 @@ leftUpperArmNode:add_child(leftUpperArm)
 leftUpperArm:scale(0.4, 1.0, 0.4)
 leftUpperArm:set_material(green)
 
+-- left forearm upper arm joint node
+lForearmUpperArmJointNode = gr.node('lForearmUpperArmJointNode')
+leftUpperArmNode:add_child(lForearmUpperArmJointNode)
+
+-- left forearm upper arm joint
+lForearmUpperArmJoint = gr.joint('lForearmUpperArmJoint', {-130.0, 0.0, 0.0}, {0.0, 0.0, 0.0})
+lForearmUpperArmJointNode:add_child(lForearmUpperArmJoint)
+
 -- Left forearm node
 leftForearmNode = gr.node('leftForearmNode')
-leftUpperArmNode:add_child(leftForearmNode)
+lForearmUpperArmJointNode:add_child(leftForearmNode)
 
 -- Construct left forearm
 leftForearm = gr.sphere('leftForearm')
 leftForearmNode:add_child(leftForearm)
-leftForearm:scale(0.2, 0.9, 0.2)
+leftForearm:scale(0.2, 0.6, 0.2)
 leftForearm:set_material(yellow)
 
 -- Left Hand node
@@ -134,7 +142,8 @@ rightHandNode:translate(0, -1, 0)
 rightForearmNode:translate(0, -1, 0)
 rightUpperArmNode:translate(2.0, -1, 0.0)
 leftHandNode:translate(0, -1, 0)
-leftForearmNode:translate(0, -1, 0)
+leftForearmNode:translate(0, -1.4, 0)
+--lForearmUpperArmJointNode:translate(0, -1.4, 0)
 leftUpperArmNode:translate(-2.0, -1, 0.0)
 shouldersNode:translate(0, 1.7, 0.0)
 rootnode:translate(0.0, 0.0, -10.0)
