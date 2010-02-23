@@ -100,6 +100,7 @@ protected:
   	// Hierarchy
   	ChildList m_children;
 	SceneNode* m_parent;
+	
 };
 
 class JointNode : public SceneNode {
@@ -143,14 +144,21 @@ public:
   const Material* get_material() const;
   Material* get_material();
 
-  void set_material(Material* material)
-  {
-    m_material = material;
-  }
+	void set_material(Material* material)
+	{
+		m_material = material;
+	}
+
+	void set_selected(bool newVal)
+	{
+		selected = newVal;
+	}
+
 
 protected:
-  Material* m_material;
-  Primitive* m_primitive;
+	Material* m_material;
+	bool selected;
+	Primitive* m_primitive;
 };
 
 #endif

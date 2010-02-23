@@ -1,6 +1,7 @@
 #ifndef CS488_VIEWER_HPP
 #define CS488_VIEWER_HPP
 
+#include <vector>
 #include <gtkmm.h>
 #include <gtkglmm.h>
 #include <iostream>
@@ -9,19 +10,51 @@
 // The "main" OpenGL widget
 class Viewer : public Gtk::GL::DrawingArea {
 public:
-  Viewer(std::string filename);
-  virtual ~Viewer();
+	Viewer(std::string filename);
+	virtual ~Viewer();
 
-  // A useful function that forces this widget to rerender. If you
-  // want to render a new frame, do not call on_expose_event
-  // directly. Instead call this, which will cause an on_expose_event
-  // call when the time is right.
-  void invalidate();
+	// A useful function that forces this widget to rerender. If you
+	// want to render a new frame, do not call on_expose_event
+	// directly. Instead call this, which will cause an on_expose_event
+	// call when the time is right.
+	void invalidate();
 
 	enum Mode {
 		JOINTS,
 		MODEL_TRANSLATE
-	};  
+	};
+	
+	void toggle_draw_circle()
+	{
+		drawTrackballCircle = !drawTrackballCircle;
+		invalidate();
+	}
+	
+	void toggle_z_buffer()
+	{
+		zBufferCull = !zBufferCull;
+		invalidate();
+	}
+	
+	void toggle_backface_cull()
+	{
+		backFaceCull = !backFaceCull;
+		invalidate();
+	}
+	
+	void toggle_frontface_cull()
+	{
+		frontFaceCull = !frontFaceCull;
+		invalidate();
+	}
+	
+	void set_mode(Mode newMode)
+	{
+		currMode = newMode;
+	}
+	
+	void undo();
+	void redo();
 protected:
 
   // Events we implement
@@ -54,11 +87,13 @@ SceneNode *root;
 bool mb1, mb2, mb3;
 Point2D startPos;
 Mode currMode;
+bool frontFaceCull, backFaceCull, zBufferCull, drawTrackballCircle;
 double translateX, translateY, translateZ;
 GLuint sphere;
 GLUquadricObj *q;
 bool picking;
 SceneNode *pickedObj;
+std::vector<SceneNode*> pickedObjs;
 };
 
 #endif

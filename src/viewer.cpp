@@ -47,6 +47,10 @@ translateX = 0;
 translateY = 0;
 translateZ = 0;
 pickedObj = NULL;
+frontFaceCull = false;
+backFaceCull= false;
+zBufferCull= false;
+drawTrackballCircle= false;
 }
 
 Viewer::~Viewer()
@@ -77,8 +81,6 @@ void Viewer::on_realize()
 
 	glShadeModel(GL_SMOOTH);
 	glClearColor( 0.4, 0.4, 0.4, 0.0 );
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
 
 	sphere = glGenLists(1);
 	glNewList(sphere, GL_COMPILE);
@@ -102,6 +104,24 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
 	if (!gldrawable->gl_begin(get_gl_context()))
 		return false;
 		
+	if (zBufferCull)
+	{
+		glEnable(GL_DEPTH_TEST);
+		glDepthMask(GL_TRUE);
+	}
+	
+	if (backFaceCull)
+	{
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
+	}
+	
+	if (frontFaceCull)
+	{
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_FRONT);
+	}
+	
 	// Set up for perspective drawing 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -115,6 +135,7 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
 	// Clear framebuffer
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
+	glEnable(GL_NORMALIZE);
 	// Set up lighting	
 	// Initialize lighting settings
 	glShadeModel(GL_SMOOTH);
@@ -128,16 +149,18 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
 	// Define properties of light 
 	float ambientLight0[] = { 0.3f, 0.3f, 0.3f, 1.0f };
 	float diffuseLight0[] = { 0.8f, 0.8f, 0.8f, 1.0f };
-	float specularLight0[] = { 0.6f, 0.6f, 0.6f, 1.0f };
-	float position0[] = { 5.0f, 0.0f, 0.0f, 1.0f };	
+	//float specularLight0[] = { 0.6f, 0.6f, 0.6f, 1.0f };
+	float position0[] = { 0.0f, 0.0f, 0.0f, 1.0f };	
 	glLightfv(GL_LIGHT0, GL_AMBIENT, ambientLight0);
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuseLight0);
-	glLightfv(GL_LIGHT0, GL_SPECULAR, specularLight0);
+	//glLightfv(GL_LIGHT0, GL_SPECULAR, specularLight0);
 	glLightfv(GL_LIGHT0, GL_POSITION, position0);
 
 	// Draw stuff
 	draw_puppet();
-	draw_trackball_circle();
+	
+	if(drawTrackballCircle)
+		draw_trackball_circle();
 	
 	// Swap the contents of the front and back buffers so we see what we
 	// just drew. This should only be done if double buffering is enabled.
@@ -175,7 +198,6 @@ bool Viewer::on_configure_event(GdkEventConfigure* event)
 
 bool Viewer::on_button_press_event(GdkEventButton* event)
 {
-//	std::cerr << "Stub: Button " << event->button << " pressed" << std::endl;
 	startPos[0] = event->x;
 	startPos[1] = event->y;
 	if (event->button == 1)
@@ -185,72 +207,87 @@ bool Viewer::on_button_press_event(GdkEventButton* event)
 	else if (event->button == 3)
 		mb3 = true;
 	
-	GLuint buff[128] = {0};
- 	GLint hits, view[4];
-
-	glSelectBuffer(128,buff);
-	glRenderMode(GL_SELECT);
-
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadIdentity();
-
-	glGetIntegerv(GL_VIEWPORT,view);
-	gluPickMatrix(event->x, view[3] - event->y, 1, 1, view);
-	gluPerspective(40.0, (GLfloat)get_width()/(GLfloat)get_height(), 0.1, 1000.0);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	glInitNames();
-	glPushName(0);
-		draw_puppet(true);
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);
-	glFlush();
-
-	// returning to normal rendering mode
-	hits = glRenderMode(GL_RENDER);
-
-	// if there are hits process them
-	
-	std::cerr << "Hits " << hits << std::endl;
-	
-	if (hits > 0)
+	if (mb1 && currMode == JOINTS)
 	{
-		
-		unsigned int i, j;
-		GLuint names, *ptr, minZ,*ptrNames, numberOfNames;
+		GLuint buff[128] = {0};
+	 	GLint hits, view[4];
 
-		printf ("hits = %d\n", hits);
-		ptr = (GLuint *) buff;
-		minZ = 0xffffffff;
-		for (i = 0; i < hits; i++) 
-		{	
-			names = *ptr;
-			ptr++;
-			if (*ptr < minZ) 
-			{
-				numberOfNames = names;
-				minZ = *ptr;
-				ptrNames = ptr+2;
-			}
+		glSelectBuffer(128,buff);
+		glRenderMode(GL_SELECT);
 
-			ptr += names+2;
-		}
-		printf ("The closest hit names are ");
-		ptr = ptrNames;
-		for (j = 0; j < numberOfNames; j++,ptr++) 
+		glMatrixMode(GL_PROJECTION);
+		glPushMatrix();
+		glLoadIdentity();
+
+		glGetIntegerv(GL_VIEWPORT,view);
+		gluPickMatrix(event->x, view[3] - event->y, 1, 1, view);
+		gluPerspective(40.0, (GLfloat)get_width()/(GLfloat)get_height(), 0.1, 1000.0);
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		glInitNames();
+		glPushName(0);
+			draw_puppet(true);
+		glMatrixMode(GL_PROJECTION);
+		glPopMatrix();
+		glMatrixMode(GL_MODELVIEW);
+		glFlush();
+
+		// returning to normal rendering mode
+		hits = glRenderMode(GL_RENDER);
+
+		// if there are hits process them
+
+		std::cerr << "Hits " << hits << std::endl;
+
+		if (hits > 0)
 		{
-			printf ("%d ", *ptr);
+			unsigned int i, j;
+			GLuint names, *ptr, minZ,*ptrNames, numberOfNames;
+
+			printf ("hits = %d\n", hits);
+			ptr = (GLuint *) buff;
+			minZ = 0xffffffff;
+			for (i = 0; i < hits; i++) 
+			{	
+				names = *ptr;
+				ptr++;
+				if (*ptr < minZ) 
+				{
+					numberOfNames = names;
+					minZ = *ptr;
+					ptrNames = ptr+2;
+				}
+
+				ptr += names+2;
+			}
+			printf ("The closest hit names are ");
+			ptr = ptrNames;
+			for (j = 0; j < numberOfNames; j++,ptr++) 
+			{
+				printf ("%d ", *ptr);
+			}
+			ptr--;
+			int pickedObjId = *ptr;
+			std::cerr << "pickedObjId " << pickedObjId << std::endl;
+
+			pickedObj = root->get_child(pickedObjId);
+			for (int i = 0; i<pickedObjs.size();i++)
+			{
+				if (pickedObjs[i]->get_name() == pickedObj->get_name())
+				{
+					// Remove object from list
+					pickedObjs.erase (pickedObjs.begin()+i);
+					((GeometryNode *)pickedObj)->set_selected(false);
+						invalidate();
+					return true;
+				}
+			}
+			((GeometryNode *)pickedObj)->set_selected(true);
+			pickedObjs.push_back(pickedObj);
 		}
-		ptr--;
-		int pickedObjId = *ptr;
-		std::cerr << "pickedObjId " << pickedObjId << std::endl;
-		pickedObj = root->get_child(pickedObjId);
-		
-		printf ("\n");
 	}
 	
+	invalidate();
 	return true;
 }
 
@@ -292,25 +329,46 @@ bool Viewer::on_motion_notify_event(GdkEventMotion* event)
 		}
 		else if (mb3)	
 		{
-			if (pickedObj != NULL)
-			{
-//				std::cerr << "picked obj " << pickedObj->get_name() << std::endl;
-				SceneNode *joint = pickedObj->get_joint();
-				double minX = ((JointNode *) joint)->get_min_x();
-				double maxX = ((JointNode *) joint)->get_max_x();
-				double currRotX = joint->get_parent()->getRotX();
-				std::cerr << "Curr rot x " << currRotX << " adding " << y2y1 << " min " << minX << " \t max " << maxX << "\n";
-				if (currRotX + y2y1 > maxX || currRotX + y2y1 < minX)
-					return true;
-				
-				y2y1 *= 10;
-				joint->get_parent()->rotate('x', y2y1);
-				
-				//child->rotate('y', y2y1);
-			}
+			
 		}
 		//root->set_transform(root->get_transform().transpose() * temp);
-		
+	}
+	else if (currMode == JOINTS)
+	{
+		if (mb1)
+		{
+			for (int i = 0;i<pickedObjs.size();i++)
+			{
+				SceneNode *joint = pickedObjs[i]->get_parent();
+				while ( joint != NULL && !joint->is_joint())
+					joint = joint->get_parent();
+					
+				if (joint == NULL)
+					continue;
+				
+				double minX = ((JointNode *) joint)->get_min_x();
+				double maxX = ((JointNode *) joint)->get_max_x();
+				double currRotX = joint->getRotX();
+				std::cerr << "Curr rot x " << currRotX << " adding " << y2y1 << " min " << minX << " \t max " << maxX << "\n";
+				if (currRotX > maxX)
+					currRotX = maxX;
+				
+				if (currRotX < minX)
+					currRotX = minX;
+					
+				if (currRotX + y2y1 > maxX)
+				{
+					continue;
+				}
+				else if(currRotX + y2y1 < minX)
+				{
+					continue;
+				}
+				
+				y2y1 *= 10;
+				joint->rotate('x', y2y1);	
+			}
+		}
 	}
 	startPos[0] = event->x;
 	startPos[1] = event->y;
@@ -363,4 +421,14 @@ void Viewer::draw_puppet(bool picking)
 		glMultMatrixd(root->get_transform().transpose().begin());
 		root->walk_gl(picking);
 	glPopMatrix();
+}
+
+void Viewer::undo()
+{
+	glPopMatrix();
+}
+
+void Viewer::redo()
+{
+	
 }

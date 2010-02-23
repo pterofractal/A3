@@ -23,25 +23,22 @@ SceneNode::~SceneNode()
 void SceneNode::walk_gl(bool picking) const
 {
 	// Fill me in
-	ChildList temp = m_children;
-	ChildList::iterator i;
-	SceneNode *tempNode = m_parent;
-	for ( i = temp.begin() ; i != temp.end(); i++ )
-	{
-		if(picking)
-			glPushName(m_id);
-		
-		glPushMatrix();
-		glMultMatrixd((*i)->get_transform().transpose().begin());
-		(*i)->walk_gl(picking);
+	glPushMatrix();
+		glMultMatrixd(m_trans.transpose().begin());
+		ChildList temp = m_children;
+		ChildList::iterator i;
+		SceneNode *tempNode = m_parent;
+		for ( i = temp.begin() ; i != temp.end(); i++ )
+		{
+			if(picking)
+				glPushName(m_id);
 
-		if (picking)
-			glPopName();
+			(*i)->walk_gl(picking);
 
-		glPopMatrix();
-	}
-	
-	
+			if (picking)
+				glPopName();	
+		}
+	glPopMatrix();	
 }
 
 SceneNode* SceneNode::get_child(std::string childName)
@@ -177,6 +174,22 @@ JointNode::~JointNode()
 void JointNode::walk_gl(bool picking) const
 {
   // Fill me in
+	glPushMatrix();
+		glMultMatrixd(m_trans.transpose().begin());
+		ChildList temp = m_children;
+		ChildList::iterator i;
+		SceneNode *tempNode = m_parent;
+		for ( i = temp.begin() ; i != temp.end(); i++ )
+		{
+			if(picking)
+				glPushName(m_id);
+
+			(*i)->walk_gl(picking);
+
+			if (picking)
+				glPopName();	
+		}
+	glPopMatrix();
 }
 
 bool JointNode::is_joint() const
@@ -214,12 +227,27 @@ void GeometryNode::walk_gl(bool picking) const
 {
 	// Fill me in
 	glPushMatrix();
-		m_material->apply_gl();
+		glMultMatrixd(m_trans.transpose().begin());	
+		
+		if (selected)
+		{
+			PhongMaterial selectedMaterial(Colour(1, 1, 1), Colour(0.1, 0.1, 0.1), 0.5);
+			selectedMaterial.apply_gl();	
+		}
+		else
+		{
+			m_material->apply_gl();
+		}
+	
 		if (picking)
 			glPushName(m_id);
+			
 		m_primitive->walk_gl(picking);	
+
 		if (picking)
 			glPopName();
+		
 	glPopMatrix();
 }
  
+
